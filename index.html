@@ -1,353 +1,531 @@
-﻿<!doctype html>
+<!DOCTYPE html>
 <html lang="gu">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>એડવાન્સ એડવોકેટ કેસ ડાયરી - Cloud Sync</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Firebase JS SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  
-  <style>
-    @media print {
-      body { background-color: white !important; padding: 0 !important; }
-      .no-print { display: none !important; }
-      .print-area { box-shadow: none !important; border: none !important; padding: 0 !important; }
-      .case-card { border: 1px solid #ccc !important; break-inside: avoid; margin-bottom: 12px !important; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advocate Case Diary - DEVRAM RABARI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #0f172a;
+            --card-bg: #ffffff;
+            --accent: #1e3a8a;
+            --gold: #d97706;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #f1f5f9;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        /* Top Banner */
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 24px 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border-bottom: 4px solid var(--gold);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 26px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        header p {
+            margin: 6px 0 0 0;
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        /* Stats & Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            border-top: 4px solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-card.today { border-top-color: #ef4444; }
+        .stat-card.tomorrow { border-top-color: var(--gold); }
+        .stat-card.total { border-top-color: #3b82f6; }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .count {
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 8px;
+            color: var(--text-dark);
+        }
+
+        /* Card Container */
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 18px;
+            color: var(--accent);
+            border-bottom: 2px solid var(--bg-body);
+            padding-bottom: 8px;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+
+        input, select, textarea {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        /* Buttons */
+        button {
+            cursor: pointer;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-success { background: #15803d; color: white; }
+        .btn-success:hover { background: #166534; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-dark); }
+        .btn-outline:hover { background: #f1f5f9; }
+
+        /* Search & Action Bar */
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        /* Case Card */
+        .case-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: transform 0.1s;
+        }
+
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .case-title {
+            font-weight: 700;
+            font-size: 17px;
+            color: var(--accent);
+        }
+
+        .case-badge {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #fef3c7;
+            color: #92400e;
+            font-weight: 600;
+            border: 1px solid #fde68a;
+        }
+
+        .case-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px 16px;
+            font-size: 14px;
+        }
+
+        .case-details div {
+            line-height: 1.5;
+        }
+
+        .case-actions {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border);
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        /* Printable Header */
+        .print-header { display: none; }
+
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            .no-print { display: none !important; }
+            .case-card { border: 1px solid #000; box-shadow: none; page-break-inside: avoid; }
+            .print-header { 
+                display: block !important; 
+                text-align: center; 
+                border-bottom: 2px solid #000; 
+                padding-bottom: 12px; 
+                margin-bottom: 20px; 
+            }
+            .print-header h2 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+            .print-header p { margin: 4px 0 0 0; font-size: 14px; color: #333; }
+        }
+    </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen p-3 sm:p-6">
-  <div class="max-w-4xl mx-auto">
-    
-    <!-- Header -->
-    <header class="bg-indigo-800 text-white p-5 sm:p-6 rounded-2xl shadow-lg mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-bold">⚖️ મારી Advocate Case Diary</h1>
-        <p class="text-indigo-200 text-sm sm:text-base mt-1">DEVRAM RABARI - Realtime Cloud Sync</p>
-      </div>
-      <div class="no-print flex flex-wrap gap-2">
-        <button onclick="exportToCSV()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg font-medium transition flex items-center gap-1">
-          📊 Excel (CSV)
-        </button>
-        <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs sm:text-sm px-3 py-2 rounded-lg font-medium transition flex items-center gap-1">
-          🖨️ પ્રિન્ટ
-        </button>
-      </div>
+<body>
+
+<div class="container">
+
+    <!-- Print Header (DEVRAM RABARI) -->
+    <div class="print-header">
+        <h2>DEVRAM RABARI</h2>
+        <p>Advocate | High Court & District Court Litigation Case Report</p>
+    </div>
+
+    <!-- App Header -->
+    <header class="no-print">
+        <h1>DEVRAM RABARI</h1>
+        <p>Advocate Case Diary & Digital Cause List</p>
     </header>
 
-    <!-- Dashboard Stats Cards -->
-    <div class="no-print grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
-        <p class="text-xs sm:text-sm font-medium text-slate-500">કુલ કેસ</p>
-        <p id="totalCasesCount" class="text-2xl sm:text-3xl font-bold text-indigo-700 mt-1">0</p>
-      </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
-        <p class="text-xs sm:text-sm font-medium text-slate-500">આજની મુદત</p>
-        <p id="todayCasesCount" class="text-2xl sm:text-3xl font-bold text-amber-600 mt-1">0</p>
-      </div>
-      <div class="col-span-2 sm:col-span-2 bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <button onclick="filterTodayCases()" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-medium text-xs sm:text-sm px-4 py-2.5 rounded-lg transition">
-          📅 આજનો બોર્ડ
-        </button>
-        <div class="w-full sm:w-auto flex items-center gap-1">
-          <input type="date" id="filterDateInput" onchange="filterByDate()" class="border border-slate-300 rounded-lg px-2 py-1.5 text-xs">
-          <button onclick="clearDateFilter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-2 py-1.5 rounded-lg">રીસેટ</button>
+    <!-- Stats Dashboard -->
+    <div class="stats-grid no-print">
+        <div class="stat-card today">
+            <h3>📌 આજના કેસો (Today)</h3>
+            <div class="count" id="todayCount">0</div>
         </div>
-      </div>
+        <div class="stat-card tomorrow">
+            <h3>📅 આવતીકાલના કેસો (Tomorrow)</h3>
+            <div class="count" id="tomorrowCount">0</div>
+        </div>
+        <div class="stat-card total">
+            <h3>📚 કુલ નોંધાયેલા કેસો</h3>
+            <div class="count" id="totalCount">0</div>
+        </div>
     </div>
 
-    <!-- Add / Edit Case Form -->
-    <section class="no-print bg-white p-5 sm:p-6 rounded-2xl shadow-md mb-6 border border-slate-200">
-      <h2 id="formTitle" class="text-xl font-semibold mb-4 text-indigo-700 flex items-center gap-2">
-        <span>➕ નવો કેસ ઉમેરો</span>
-      </h2>
-      <form id="caseForm" class="space-y-4">
-        <input type="hidden" id="editCaseId" value="">
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">કેસ નંબર / ટાઇટલ *</label>
-            <input type="text" id="caseNumber" required placeholder="દા.ત. Civil Suit 12/2026" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">અસીલ (Client) નું નામ *</label>
-            <input type="text" id="clientName" required placeholder="અસીલનું નામ" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">અસીલનો મોબાઈલ નંબર</label>
-            <input type="tel" id="clientPhone" placeholder="10 અંકનો મોબાઈલ નંબર" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">કોર્ટનું નામ *</label>
-            <input type="text" id="courtName" required placeholder="દા.ત. જિલ્લા કોર્ટ, અહમદાબાદ" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">આગામી મુદતની તારીખ *</label>
-            <input type="date" id="hearingDate" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">નોંધ / વિગત / સ્ટેજ</label>
-          <textarea id="caseNote" rows="2" placeholder="કેસના સ્ટેજ અથવા અગત્યની નોંધ લખો..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
-        </div>
-
-        <div class="flex gap-2">
-          <button type="submit" id="saveBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition text-sm">
-            💾 કેસ સેવ કરો (Cloud Sync)
-          </button>
-          <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-slate-400 hover:bg-slate-500 text-white font-medium px-4 py-2.5 rounded-lg transition text-sm">
-            રદ કરો
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Search & Filter Controls -->
-    <div class="no-print bg-white p-4 rounded-xl shadow-sm mb-6 border border-slate-200 flex flex-col sm:flex-row gap-3 justify-between items-center">
-      <div class="w-full sm:w-2/3 relative">
-        <input type="text" id="searchInput" onkeyup="searchCases()" placeholder="🔍 સર્ચ કરો (કેસ નંબર, અસીલ, મોબાઈલ કે કોર્ટ)..." class="w-full border border-slate-300 rounded-lg pl-3 pr-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-      </div>
-      <div class="flex gap-2 w-full sm:w-auto justify-end">
-        <button onclick="renderCasesList(allCasesList)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm px-3 py-2 rounded-lg font-medium border border-slate-300 transition">
-          બધા કેસ
-        </button>
-      </div>
-    </div>
-
-    <!-- Cases List Section -->
-    <section class="print-area bg-white p-5 sm:p-6 rounded-2xl shadow-md border border-slate-200">
-      <div class="flex justify-between items-center mb-4">
-        <h2 id="listHeading" class="text-xl font-semibold text-indigo-700">📋 તમારા કેસની યાદી</h2>
-      </div>
-
-      <div id="noCasesMsg" class="text-slate-500 text-center py-8 text-sm">હજુ સુધી કોઈ કેસ ઉમેરવામાં આવ્યો નથી.</div>
-      <div id="casesList" class="space-y-4"></div>
-    </section>
-
-  </div>
-
-  <script>
-    // Firebase Configuration - Tamari firebase details ahiya muki do
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    // Initialize Firebase
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.database();
-    let allCasesList = [];
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('hearingDate').value = today;
-      listenToFirebase();
-    });
-
-    // Realtime listener from Firebase Database
-    function listenToFirebase() {
-      db.ref('advocateCases').on('value', (snapshot) => {
-        const data = snapshot.val();
-        allCasesList = [];
-        if (data) {
-          Object.keys(data).forEach(key => {
-            allCasesList.push({ id: key, ...data[key] });
-          });
-        }
-        allCasesList.sort((a, b) => new Date(a.hearingDate) - new Date(b.hearingDate));
-        renderCasesList(allCasesList);
-      });
-    }
-
-    const caseForm = document.getElementById('caseForm');
-    const casesList = document.getElementById('casesList');
-    const noCasesMsg = document.getElementById('noCasesMsg');
-    const formTitle = document.getElementById('formTitle');
-    const saveBtn = document.getElementById('saveBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-
-    caseForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const editId = document.getElementById('editCaseId').value;
-      const caseData = {
-        caseNumber: document.getElementById('caseNumber').value,
-        clientName: document.getElementById('clientName').value,
-        clientPhone: document.getElementById('clientPhone').value,
-        courtName: document.getElementById('courtName').value,
-        hearingDate: document.getElementById('hearingDate').value,
-        caseNote: document.getElementById('caseNote').value
-      };
-
-      if (editId) {
-        db.ref('advocateCases/' + editId).update(caseData, (error) => {
-          if (!error) resetForm();
-        });
-      } else {
-        const newRef = db.ref('advocateCases').push();
-        newRef.set(caseData, (error) => {
-          if (!error) resetForm();
-        });
-      }
-    });
-
-    function renderCasesList(listToDisplay) {
-      updateStats(allCasesList);
-      casesList.innerHTML = '';
-
-      if (listToDisplay.length === 0) {
-        noCasesMsg.style.display = 'block';
-        return;
-      } else {
-        noCasesMsg.style.display = 'none';
-      }
-
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      listToDisplay.forEach(function(item) {
-        const isToday = item.hearingDate === todayStr;
-        const card = document.createElement('div');
-        card.className = `case-card border p-4 rounded-xl bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition ${isToday ? 'border-amber-400 bg-amber-50/50' : 'border-slate-200'}`;
-        
-        let whatsappBtn = '';
-        if (item.clientPhone) {
-          const cleanPhone = item.clientPhone.replace(/\D/g, '');
-          const msg = encodeURIComponent(`Namaste ${item.clientName}, tamara case (${item.caseNumber}) ni aagami mudat tarikh ${item.hearingDate} chhe. - Adv. Devram Rabari`);
-          whatsappBtn = `<a href="https://wa.me/91${cleanPhone}?text=${msg}" target="_blank" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1">💬 WhatsApp</a>`;
-        }
-
-        card.innerHTML = `
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <h3 class="font-bold text-lg text-indigo-950">${item.caseNumber}</h3>
-              ${isToday ? '<span class="no-print bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">આજે મુદત</span>' : ''}
+    <!-- Add Case Form -->
+    <div class="card no-print">
+        <h3 id="formTitle">➕ નવો કેસ ઉમેરો</h3>
+        <form id="caseForm">
+            <input type="hidden" id="editIndex">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>કેસ નંબર / વર્ષ*</label>
+                    <input type="text" id="caseNo" placeholder="ઉદા. એ.બી.સી. ૧૨૩/૨૦૨૪" required>
+                </div>
+                <div class="form-group">
+                    <label>કોર્ટનું નામ*</label>
+                    <input type="text" id="courtName" placeholder="ઉદા. પ્રિન્સિપલ ડિસ્ટ્રિક્ટ કોર્ટ" required>
+                </div>
+                <div class="form-group">
+                    <label>વાદી / ફરિયાદીનું નામ*</label>
+                    <input type="text" id="applicant" placeholder="વાદીનું નામ લખો" required>
+                </div>
+                <div class="form-group">
+                    <label>પ્રતિવાદી / સામાવાળાનું નામ*</label>
+                    <input type="text" id="opponent" placeholder="સામાવાળાનું નામ લખો" required>
+                </div>
+                <div class="form-group">
+                    <label>કેસનો સ્ટેજ (Stage)*</label>
+                    <input type="text" id="stage" placeholder="મુદ્દત / પુરાવો / દલીલ" required>
+                </div>
+                <div class="form-group">
+                    <label>મુદતની તારીખ (Next Date)*</label>
+                    <input type="date" id="nextDate" required>
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>કેસની વિગત / નોંધ (Notes)</label>
+                    <textarea id="notes" rows="2" placeholder="મહત્વની રજૂઆત કે નોંધ અહીં લખો..."></textarea>
+                </div>
             </div>
-            <p class="text-sm text-slate-700 mt-1"><strong>અસીલ:</strong> ${item.clientName} ${item.clientPhone ? '(' + item.clientPhone + ')' : ''} | <strong>કોર્ટ:</strong> ${item.courtName}</p>
-            <p class="text-sm ${isToday ? 'text-amber-700 font-bold' : 'text-red-600 font-medium'} mt-1"><strong>મુદત તારીખ:</strong> ${item.hearingDate}</p>
-            ${item.caseNote ? `<p class="text-xs text-slate-600 mt-2 bg-white p-2.5 rounded-lg border border-slate-200"><strong>નોંધ:</strong> ${item.caseNote}</p>` : ''}
-          </div>
-          <div class="no-print flex flex-wrap items-center gap-2 self-end sm:self-center">
-            ${whatsappBtn}
-            <button onclick="editCase('${item.id}')" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition">✏️ એડિટ</button>
-            <button onclick="deleteCase('${item.id}')" class="bg-red-100 hover:bg-red-200 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition">🗑️ ડિલીટ</button>
-          </div>
-        `;
-        casesList.appendChild(card);
-      });
-    }
+            <div style="margin-top: 16px; text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn-outline" onclick="resetForm()">રદ કરો</button>
+                <button type="submit" class="btn-primary" id="saveBtn">💾 કેસ સાચવો</button>
+            </div>
+        </form>
+    </div>
 
-    function updateStats(cases) {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const todayCount = cases.filter(c => c.hearingDate === todayStr).length;
+    <!-- Action Bar (Search & Backup) -->
+    <div class="action-bar no-print">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 કેસ નં, નામ, કોર્ટ કે સ્ટેજથી શોધો..." oninput="renderCases()">
+        <button class="btn-success" onclick="exportData()">📥 બેકઅપ ડાઉનલોડ</button>
+        <button class="btn-outline" onclick="document.getElementById('importFile').click()">📤 બેકઅપ અપલોડ</button>
+        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+    </div>
 
-      document.getElementById('totalCasesCount').innerText = cases.length;
-      document.getElementById('todayCasesCount').innerText = todayCount;
-    }
+    <!-- Cases List Container -->
+    <div id="casesList"></div>
 
-    function filterTodayCases() {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const todayCases = allCasesList.filter(c => c.hearingDate === todayStr);
-      document.getElementById('listHeading').innerText = "📅 આજની મુદતના કેસ";
-      renderCasesList(todayCases);
-    }
+</div>
 
-    function filterByDate() {
-      const selectedDate = document.getElementById('filterDateInput').value;
-      if (!selectedDate) return;
-      const filtered = allCasesList.filter(c => c.hearingDate === selectedDate);
-      document.getElementById('listHeading').innerText = `📅 તારીખ ${selectedDate} ના કેસ`;
-      renderCasesList(filtered);
-    }
+<script>
+    let cases = JSON.parse(localStorage.getItem('devram_cases')) || [];
+    const form = document.getElementById('caseForm');
 
-    function clearDateFilter() {
-      document.getElementById('filterDateInput').value = '';
-      document.getElementById('listHeading').innerText = "📋 તમારા કેસની યાદી";
-      renderCasesList(allCasesList);
-    }
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const editIndex = document.getElementById('editIndex').value;
+        
+        const caseData = {
+            caseNo: document.getElementById('caseNo').value,
+            courtName: document.getElementById('courtName').value,
+            applicant: document.getElementById('applicant').value,
+            opponent: document.getElementById('opponent').value,
+            stage: document.getElementById('stage').value,
+            nextDate: document.getElementById('nextDate').value,
+            notes: document.getElementById('notes').value
+        };
 
-    function searchCases() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      const filtered = allCasesList.filter(c => 
-        c.caseNumber.toLowerCase().includes(query) ||
-        c.clientName.toLowerCase().includes(query) ||
-        (c.clientPhone && c.clientPhone.toLowerCase().includes(query)) ||
-        c.courtName.toLowerCase().includes(query) ||
-        (c.caseNote && c.caseNote.toLowerCase().includes(query))
-      );
+        if (editIndex === '') {
+            cases.push(caseData);
+        } else {
+            cases[editIndex] = caseData;
+        }
 
-      document.getElementById('listHeading').innerText = "🔍 સર્ચ પરિણામો";
-      renderCasesList(filtered);
-    }
+        saveAndRefresh();
+        resetForm();
+    });
 
-    function editCase(id) {
-      const item = allCasesList.find(c => c.id === id);
-      if (item) {
-        document.getElementById('editCaseId').value = item.id;
-        document.getElementById('caseNumber').value = item.caseNumber;
-        document.getElementById('clientName').value = item.clientName;
-        document.getElementById('clientPhone').value = item.clientPhone || '';
-        document.getElementById('courtName').value = item.courtName;
-        document.getElementById('hearingDate').value = item.hearingDate;
-        document.getElementById('caseNote').value = item.caseNote || '';
-
-        formTitle.innerHTML = '<span>✏️ કેસમાં સુધારો (Edit) કરો</span>';
-        saveBtn.innerText = '🔄 અપડેટ કરો';
-        cancelBtn.classList.remove('hidden');
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+    function saveAndRefresh() {
+        localStorage.setItem('devram_cases', JSON.stringify(cases));
+        renderCases();
+        updateStats();
     }
 
     function resetForm() {
-      caseForm.reset();
-      document.getElementById('editCaseId').value = '';
-      formTitle.innerHTML = '<span>➕ નવો કેસ ઉમેરો</span>';
-      saveBtn.innerText = '💾 કેસ સેવ કરો (Cloud Sync)';
-      cancelBtn.classList.add('hidden');
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('hearingDate').value = today;
-      document.getElementById('listHeading').innerText = "📋 તમારા કેસની યાદી";
+        form.reset();
+        document.getElementById('editIndex').value = '';
+        document.getElementById('formTitle').innerText = '➕ નવો કેસ ઉમેરો';
+        document.getElementById('saveBtn').innerText = '💾 કેસ સાચવો';
     }
 
-    function deleteCase(id) {
-      if (confirm('શું તમે ખરેખર આ કેસ ડિલીટ કરવા માંગો છો?')) {
-        db.ref('advocateCases/' + id).remove();
-      }
+    function renderCases() {
+        const list = document.getElementById('casesList');
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        list.innerHTML = '';
+
+        const filtered = cases.filter(c => 
+            c.caseNo.toLowerCase().includes(query) ||
+            c.courtName.toLowerCase().includes(query) ||
+            c.applicant.toLowerCase().includes(query) ||
+            c.opponent.toLowerCase().includes(query) ||
+            c.stage.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            list.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">કોઈ કેસ નોંધાયેલ નથી અથવા સર્ચ મુજબ મળ્યો નથી.</div>`;
+            return;
+        }
+
+        filtered.forEach((c) => {
+            const originalIndex = cases.indexOf(c);
+            const card = document.createElement('div');
+            card.className = 'case-card';
+            card.innerHTML = `
+                <div class="case-header">
+                    <span class="case-title">${c.caseNo}</span>
+                    <span class="case-badge">📅 મુદત: ${formatDate(c.nextDate)}</span>
+                </div>
+                <div class="case-details">
+                    <div><strong>કોર્ટ:</strong> ${c.courtName}</div>
+                    <div><strong>સ્ટેજ:</strong> ${c.stage}</div>
+                    <div><strong>વાદી:</strong> ${c.applicant}</div>
+                    <div><strong>સામાવાળા:</strong> ${c.opponent}</div>
+                    ${c.notes ? `<div style="grid-column: 1 / -1; margin-top: 4px;"><strong>નોંધ:</strong> ${c.notes}</div>` : ''}
+                </div>
+                <div class="case-actions no-print">
+                    <button class="btn-outline" onclick="printSingleCase(${originalIndex})">🖨️ પ્રિન્ટ / PDF</button>
+                    <button class="btn-outline" onclick="editCase(${originalIndex})">✏️ એડિટ</button>
+                    <button class="btn-danger" onclick="deleteCase(${originalIndex})">🗑️ ડિલીટ</button>
+                </div>
+            `;
+            list.appendChild(card);
+        });
     }
 
-    function exportToCSV() {
-      if (allCasesList.length === 0) {
-        alert('ડાઉનલોડ કરવા માટે કોઈ કેસ ઉપલબ્ધ નથી!');
-        return;
-      }
-
-      let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-      csvContent += "કેસ નંબર,અસીલનું નામ,મોબાઈલ નંબર,કોર્ટનું નામ,મુદત તારીખ,નોંધ\n";
-
-      allCasesList.forEach(c => {
-        const row = `"${c.caseNumber}","${c.clientName}","${c.clientPhone || ''}","${c.courtName}","${c.hearingDate}","${(c.caseNote || '').replace(/"/g, '""')}"`;
-        csvContent += row + "\n";
-      });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Case_Diary_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    function formatDate(dateStr) {
+        if(!dateStr) return '-';
+        const [y, m, d] = dateStr.split('-');
+        return `${d}-${m}-${y}`;
     }
-  </script>
+
+    function updateStats() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+        const todayCount = cases.filter(c => c.nextDate === todayStr).length;
+        const tomorrowCount = cases.filter(c => c.nextDate === tomorrowStr).length;
+
+        document.getElementById('todayCount').innerText = todayCount;
+        document.getElementById('tomorrowCount').innerText = tomorrowCount;
+        document.getElementById('totalCount').innerText = cases.length;
+    }
+
+    function editCase(index) {
+        const c = cases[index];
+        document.getElementById('editIndex').value = index;
+        document.getElementById('caseNo').value = c.caseNo;
+        document.getElementById('courtName').value = c.courtName;
+        document.getElementById('applicant').value = c.applicant;
+        document.getElementById('opponent').value = c.opponent;
+        document.getElementById('stage').value = c.stage;
+        document.getElementById('nextDate').value = c.nextDate;
+        document.getElementById('notes').value = c.notes || '';
+        
+        document.getElementById('formTitle').innerText = '✏️ કેસની વિગત સુધારો';
+        document.getElementById('saveBtn').innerText = '🔄 અપડેટ કરો';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteCase(index) {
+        if (confirm('શું તમે ખરેખર આ કેસ ડિલીટ કરવા માંગો છો?')) {
+            cases.splice(index, 1);
+            saveAndRefresh();
+        }
+    }
+
+    function printSingleCase(index) {
+        const c = cases[index];
+        const searchVal = document.getElementById('searchInput').value;
+        document.getElementById('searchInput').value = c.caseNo;
+        renderCases();
+        window.print();
+        document.getElementById('searchInput').value = searchVal;
+        renderCases();
+    }
+
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cases, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `DEVRAM_RABARI_Cases_Backup_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importData(event) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (Array.isArray(imported)) {
+                    if (confirm('આ ફાઇલમાંથી ડેટા અપલોડ કરવો છે?')) {
+                        cases = imported;
+                        saveAndRefresh();
+                        alert('ડેટા સફળતાપૂર્વક અપલોડ થઈ ગયો!');
+                    }
+                } else {
+                    alert('અમાન્ય ફાઇલ ફોર્મેટ!');
+                }
+            } catch (err) {
+                alert('ફાઇલ વાંચવામાં ભૂલ આવી.');
+            }
+        };
+        reader.readAsText(event.target.files[0]);
+    }
+
+    // Initial Load
+    renderCases();
+    updateStats();
+</script>
+
 </body>
 </html>
